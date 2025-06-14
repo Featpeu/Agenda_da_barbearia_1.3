@@ -1,21 +1,18 @@
-
+<!-- Conteúdo completo do novo index.html com horários atualizados -->
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Agenda da Barbearia</title>
-<style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agenda da Barbearia</title>
+  <style>
     body {
       font-family: Arial, sans-serif;
       background: #000;
       color: white;
       padding: 20px;
     }
-    h1, h2 {
-      text-align: center;
-    }
+    h1, h2 { text-align: center; }
     .navegacao {
       text-align: center;
       margin-bottom: 20px;
@@ -36,96 +33,94 @@
     }
     .ocupado { color: red; }
     .disponivel { color: green; }
-    input {
-      margin-left: 5px;
-      width: 100px;
-    }
+    input { margin-left: 5px; width: 100px; }
   </style>
 </head>
 <body>
-<h1>Agenda da Barbearia</h1>
-<div class="navegacao">
-<button onclick="mudarMes(-1)">← Mês anterior</button>
-<span id="mesAtual"></span>
-<button onclick="mudarMes(1)">Próximo mês →</button>
-</div>
-<div id="agenda"></div>
-<script>
-    const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    const horarios = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"];
+  <h1>Agenda da Barbearia</h1>
+  <div class="navegacao">
+    <button onclick="mudarMes(-1)">← Mês anterior</button>
+    <span id="mesAtual"></span>
+    <button onclick="mudarMes(1)">Próximo mês →</button>
+  </div>
+  <div id="agenda"></div>
+
+  <script>
+    const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const horarios = [
+      "09:30","10:00","10:30","11:00","11:30",
+      "14:00","14:30","15:00","15:30",
+      "16:00","16:30","17:00","17:30",
+      "18:00","18:30","19:00","19:30"
+    ];
     const agendaDiv = document.getElementById("agenda");
     const spanMes = document.getElementById("mesAtual");
-
-    let ano = 2025;
-    let mes = 5;
+    let ano = 2025, mes = 5;
 
     function chave(dia, hora) {
       return `ag-${ano}-${mes}-${dia}-${hora}`;
     }
-
-    function salvar(dia, hora, dados) {
-      localStorage.setItem(chave(dia, hora), JSON.stringify(dados));
+    function salvar(dia, hora, nome) {
+      localStorage.setItem(chave(dia,hora), JSON.stringify({ nome, reservado: true }));
     }
-
     function carregar(dia, hora) {
-      const item = localStorage.getItem(chave(dia, hora));
-      return item ? JSON.parse(item) : { nome: "", reservado: false };
+      const v = localStorage.getItem(chave(dia,hora));
+      return v ? JSON.parse(v) : { nome:"", reservado:false };
+    }
+    function cancelar(d, h) {
+      localStorage.removeItem(chave(d,h));
     }
 
-    function cancelar(dia, hora) {
-      localStorage.removeItem(chave(dia, hora));
-    }
-
-    function renderizar() {
+    function renderizar(){
       agendaDiv.innerHTML = "";
-      const dataMes = new Date(ano, mes);
-      spanMes.textContent = dataMes.toLocaleString("pt-BR", { month: "long", year: "numeric" });
+      const dataBase = new Date(ano, mes);
+      spanMes.textContent = dataBase.toLocaleString("pt-BR",{month:"long", year:"numeric"});
+      const diasNoMes = new Date(ano, mes+1,0).getDate();
 
-      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-      for (let dia = 1; dia <= diasNoMes; dia++) {
+      for(let dia=1; dia<=diasNoMes; dia++){
         const data = new Date(ano, mes, dia);
         const divDia = document.createElement("div");
         divDia.className = "dia";
-        divDia.innerHTML = `<h3>${diasSemana[data.getDay()]}, ${dia}/${mes + 1}/${ano}</h3>`;
+        divDia.innerHTML = `<h2>${diasSemana[data.getDay()]}, ${dia}/${mes+1}/${ano}</h2>`;
 
         horarios.forEach(hora => {
-          const estado = carregar(dia, hora);
+          const est = carregar(dia, hora);
           const divHora = document.createElement("div");
           divHora.className = "hora";
           const spanStatus = document.createElement("span");
-          spanStatus.textContent = estado.reservado ? `Reservado por ${estado.nome}` : "Disponível";
-          spanStatus.className = estado.reservado ? "ocupado" : "disponivel";
+          spanStatus.textContent = est.reservado ? `Reservado por ${est.nome}` : "Disponível";
+          spanStatus.className = est.reservado ? "ocupado" : "disponivel";
 
           const input = document.createElement("input");
           input.placeholder = "Nome";
 
-          const btnReservar = document.createElement("button");
-          btnReservar.textContent = "Reservar";
-          btnReservar.onclick = () => {
-            if (!input.value.trim()) return;
-            salvar(dia, hora, { nome: input.value, reservado: true });
+          const btnR = document.createElement("button");
+          btnR.textContent = "Reservar";
+          btnR.onclick = () => {
+            if(!input.value.trim()) return;
+            salvar(dia, hora, input.value.trim());
             renderizar();
           };
 
-          const btnCancelar = document.createElement("button");
-          btnCancelar.textContent = "Cancelar";
-          btnCancelar.onclick = () => {
+          const btnC = document.createElement("button");
+          btnC.textContent = "Cancelar";
+          btnC.onclick = () => {
             cancelar(dia, hora);
             renderizar();
           };
 
-          divHora.append(hora, spanStatus, input, btnReservar, btnCancelar);
-          divDia.appendChild(divHora);
+          divHora.append(hora, spanStatus, input, btnR, btnC);
+          divDia.append(divHora);
         });
 
-        agendaDiv.appendChild(divDia);
+        agendaDiv.append(divDia);
       }
     }
 
-    function mudarMes(offset) {
-      mes += offset;
-      if (mes > 11) { mes = 0; ano++; }
-      if (mes < 0) { mes = 11; ano--; }
+    function mudarMes(off){
+      mes += off;
+      if(mes>11){ mes=0; ano++; }
+      if(mes<0){ mes=11; ano--; }
       renderizar();
     }
 
